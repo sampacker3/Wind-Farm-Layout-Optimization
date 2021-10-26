@@ -1,21 +1,31 @@
-# Wind-Farm-Layout-Optimization
+# windfarmp
+Code that optimises the layout and number of wind turbines in offshore wind farms.
 
-Aim 
+As the world’s power mix increasingly shifts towards renewable energy sources, the mathematically
+complex multivariate nonlinear problem of wind farm layout optimisation is of important focus to
+improve the cost effectiveness of their installation. The tool created in this project optimises
+the layout and number of model specific turbines in an offshore wind farm for any macro-siting location
+that wind and bathymetry data is provided for, and for any budget, such that the ‘cost per unit of energy’
+objective function is minimized.
 
-Improve upon an already existing computational model that optimizes the positions of wind turbines in a wind farm with respect to its cost-power ratio. This is to be achieved by adapting existing methods or adding new features to improve the accuracy and performance of the model. 
+The tool models the costs associated with changing sea depth, fixed costs, turbine and maintenance costs,
+and the costs associated with realistic cabling network constraints as input parameters. Energy output is
+modelled as a function of wind speed using a turbine power curve, and the wind shadowing effects caused by
+turbines drawing energy from the wind. The latter is modelled using a product of a Gaussian decay and a cosine
+squared half wave angular dependence, with a range parameter, an angle parameter, and a scaling factor, in
+replacement of a computationally expensive CFD model to reduce computation time. The wind shadowing model
+could be replaced by a CFD model and the optimisation component would still function.
 
-Objectives 
+A variety of mathematical processes were used to create the tool, including but not limited to: optimisation,
+graph theory surrounding capacited minimum spanning trees, and an adaption of k-means clustering.
 
-Below are the projects objectives which were completed over its duration. Several project ideas were put forth based on previous students’ recommendations as well as some original ideas. A handful of them were selected via a decision matrix resulting in the following project objectives: 
+The key limitation of the developed tool is the inability to sufficiently model the electrical constraints
+that determine the turbine capacity of a cable that connects to the wind farm’s substation. It can thus be found
+that an arbitrarily placed capacity limitation prohibits the ability to spread turbines apart in a cost-effective
+manner that sufficiently mitigates the increased wind shadowing effect that an increase in turbines incurs.
+It can therefore be concluded that including cable capacity as an optimisable parameter would be a worthwhile addition.
 
-*Review and update existing datasets and costing parameters where possible to maintain the tools relevancy. 
+A list of dependencies and further instructions for use will be added soon. In the meantime, feel free to contact me at:
+hickman.aaron07@gmail.com for any further enquires. Main code base is within the file Base_Costs_Code.ipynb.
 
-*Develop the model to be more marketable by adding in a payback time function. 
-
-*Research and implement the costs associated with existing wind turbine foundations. 
-
-*Find a more effective method of calculating the area that the turbines in the wind farm occupy hence creating a more accurate land cost value. 
-
-*Allow the computational tool to be more user friendly by designing a user interface. 
-
-*Improve the model’s realism by adding in a cabling connection between the substation and the shoreline. 
+This project was my first attempt at using Python, so any feedback sent to the email above would also be appreciated :)
