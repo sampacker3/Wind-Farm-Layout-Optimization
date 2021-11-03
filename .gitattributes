@@ -1,0 +1,2 @@
+*.pbxproj binary merge=union
+*.ipynb filter=nbstripout
