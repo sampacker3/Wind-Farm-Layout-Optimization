@@ -46,6 +46,8 @@ class TurbineUtility:
         
 
 
+
+
 class GP_train:
     def __init__(self):
         self.turbine_utility = TurbineUtility()
@@ -53,20 +55,11 @@ class GP_train:
 
     def train_model(self):
         # LOAD DATA
-        dataset_full = pd.read_csv("all_dataset.csv", index_col=0)
+        dataset_full = pd.read_csv("turb_data.csv", index_col=0)
         symbol="Siemens"
         k=0
         count=0
-        dataset_full["IDnum"]=pd.Series()
-        for i in range(len(dataset_full)):
-            dataset_full.at[i,"IDnum"]=k
-            count = count +1
-            if (count==dataset_full["Num_tot_turb"].iloc[i]):
-                k=k+1
-                count=0
-        dataset_full["Num_tot_turb"]=dataset_full["Num_tot_turb"].astype(int)
-        dataset_full["Turb_num"]=dataset_full["Turb_num"].astype(int)
-        dataset_full["IDnum"]=dataset_full["IDnum"].astype(int)
+        
         numsims=dataset_full["IDnum"].iloc[-1]+1
         turb = [symbol]
         # USE TurbineUtility here
@@ -80,38 +73,46 @@ class GP_train:
          # outputs: fingerprints and reference velocities
         count=0
         dataset_fp=np.empty(shape=(0, 3))
+        dataset_rws=np.empty(shape=(0, 1))
         dataset_ws=np.empty(shape=(0, 1))
         dataset_pos=np.empty(shape=(0, 2))
         for i in range(numsims):
-            numturb=dataset_full["Num_tot_turb"].iloc[count]
+            numturb=dataset_full["num_tot_turb"].iloc[count]
             position = np.empty((numturb,2))
+            rws = np.empty((numturb,1))
             ws = np.empty((numturb,1))
             fp = np.empty((numturb,3))
             for k in range(numturb):
-                position[k,0]=dataset_full.at[count,"X_coord"]
-                position[k,1]=dataset_full.at[count,"Y_coord"]
-                ws[k,0]=dataset_full.at[count,"Ref_wind"]
+                position[k,0]=dataset["x_coord"].iloc[count]#dataset_full.at[count,"x_coord"]
+                position[k,1]=dataset["y_coord"].iloc[count]#dataset_full.at[count,"y_coord"]
+                rws[k,0]=dataset["ref_wind_speed"].iloc[count]#dataset_full.at[count,"ref_wind_speed"]
+                ws[k,0]=dataset["wind_speed"].iloc[count]#dataset_full.at[count,"wind_speed"]
                 count = count+ 1
+
             neigh=self.turbine_utility.nlist(position, numturb) #And here
             fingerprints=self.turbine_utility.fingerprint(position, numturb) # and here
             fingerprints=np.array(fingerprints)
             dataset_fp=np.append(dataset_fp,fingerprints,axis=0)
             dataset_ws=np.append(dataset_ws,ws,axis=0)
+            dataset_rws=np.append(dataset_rws,rws,axis=0)
             dataset_pos=np.append(dataset_pos,position,axis=0)
             dataset=np.concatenate((dataset_fp, dataset_ws),axis=1)
-        dataset = pd.DataFrame(dataset, columns = ['Fingerprint(G2)','Fingerprint(G4)','Fingerprint(G6)','Ref_Wind_Speed'])
-        X=dataset[["Fingerprint(G2)","Fingerprint(G4)","Fingerprint(G6)"]].to_numpy()
-        Y=dataset[["Ref_Wind_Speed"]].to_numpy()
-        train_dataset = dataset.sample(frac=0.8, random_state=0)
-        test_dataset = dataset.drop(train_dataset.index)
-        Xtrain=train_dataset[["Fingerprint(G2)","Fingerprint(G4)","Fingerprint(G6)"]].to_numpy()
+
+
+        all_data=np.concatenate((dataset_fp, dataset_ws, dataset_rws),axis=1)
+        all_data = pd.DataFrame(all_data, columns = ['Fingerprint(G2)','Fingerprint(G4)','Fingerprint(G6)','Wind_Speed','Ref_Wind_Speed'])
+        X=all_data[["Fingerprint(G2)","Fingerprint(G4)","Fingerprint(G6)","Wind_Speed"]].to_numpy()
+        Y=all_data[["Ref_Wind_Speed"]].to_numpy()
+        train_dataset = all_data.sample(frac=0.8, random_state=0)
+        test_dataset = all_data.drop(train_dataset.index)
+        Xtrain=train_dataset[["Fingerprint(G2)","Fingerprint(G4)","Fingerprint(G6)","Wind_Speed"]].to_numpy()
         Ytrain=train_dataset[["Ref_Wind_Speed"]].to_numpy()
-        Xtest=test_dataset[["Fingerprint(G2)","Fingerprint(G4)","Fingerprint(G6)"]].to_numpy()
+        Xtest=test_dataset[["Fingerprint(G2)","Fingerprint(G4)","Fingerprint(G6)","Wind_Speed"]].to_numpy()
         Ytest=test_dataset[["Ref_Wind_Speed"]].to_numpy()
 
         
         # DEFINE KERNEL
-        ker = GPy.kern.RBF(3,lengthscale=0.1)
+        ker = GPy.kern.RBF(4,lengthscale=0.1, ARD=True)
     
         # CREATE GP MODEL
         m = GPy.models.GPRegression(Xtrain,Ytrain,ker)
